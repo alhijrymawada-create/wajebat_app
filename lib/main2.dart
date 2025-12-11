@@ -3,7 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -44,7 +43,6 @@ class _HomePageState extends State<HomePage> {
                   }
                   setState(() {});
                 } else {
-                  // User canceled the picker
                 }
               } catch (_) {}
             },
