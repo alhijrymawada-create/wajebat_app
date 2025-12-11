@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'UserInfoCard.dart'; // assume it is in a separate file
-
+import 'LikeButton.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -16,35 +15,26 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Students List')),
+      appBar: AppBar(title: const Text('Posts')),
       body: ListView(
         children: const [
-          UserInfoCard(
-            name: 'Mawada Omar',
-            email: 'ali@example.com',
-            role: 'Student',
+          ListTile(
+            title: Text('Post 1'),
+            trailing: LikeButton(),
           ),
-          UserInfoCard(
-            name: 'Sara Hassan',
-            email: 'sara@example.com',
-            role: 'Student',
+          ListTile(
+            title: Text('Post 2'),
+            trailing: LikeButton(initialIsLiked: true),
           ),
-          UserInfoCard(
-            name: 'Dr. Mazin',
-            email: 'teacher@example.com',
-            role: 'Teacher',
-          ),
-          UserInfoCard(
-            name: 'Dr. Mazin',
-            email: 'teacher@example.com',
-            role: 'Teacher',
+          ListTile(
+            title: Text('Post 3'),
+            trailing: LikeButton(),
           ),
         ],
       ),
