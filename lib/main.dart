@@ -1,86 +1,204 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import 'package:file_picker/file_picker.dart';
+import 'textfiles.dart';
+import 'sqldb.dart';
+
+String x = "";
 
 void main() {
-  runApp(SettingsPage());
-}
-class SettingsPage extends StatefulWidget {
-  @override
-  _SettingsPageState createState() => _SettingsPageState();
+  runApp(const MyApp());
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  TextEditingController _usernameController = TextEditingController();
-  bool _darkModeEnabled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  // Method to load saved settings
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _usernameController.text = prefs.getString('username') ?? '';
-      _darkModeEnabled = prefs.getBool('darkMode') ?? false;
-    });
-  }
-
-  // Method to save settings
-  Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', _usernameController.text);
-    await prefs.setBool('darkMode', _darkModeEnabled);
-    print('Settings saved');
-  }
-
-  // Method to Delete settings
-  Future<void> _clearSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('username'); // Remove username
-    await prefs.remove('darkMode'); // Remove dark mode preference
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: Text('Settings')),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
+      title: 'File Manager',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(title: 'File Manager'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  SqlDb sqlDb = SqlDb();
+  Textfiles fileobj = Textfiles();
+
+  File? selectedFile;
+  String fileContent = "";
+
+  TextEditingController newnote = TextEditingController();
+  TextEditingController filename = TextEditingController();
+  TextEditingController dirName = TextEditingController();
+
+  // ------------ التعديل هنا --------------------
+  Future pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['txt'],
+        withData: true, // مهم للويب
+      );
+
+      if (result == null) {
+        print("User cancelled");
+        return;
+      }
+
+      final picked = result.files.single;
+
+      if (kIsWeb) {
+        /// الويب: لا يوجد path → نستخدم bytes
+        final bytes = picked.bytes;
+        if (bytes != null) {
+          fileContent = String.fromCharCodes(bytes);
+        } else {
+          fileContent = "No data available";
+        }
+      } else {
+        /// Android / iOS
+        final path = picked.path;
+        if (path != null) {
+          selectedFile = File(path);
+          fileContent = await fileobj.readTextFile2(selectedFile);
+        }
+      }
+
+      setState(() {});
+    } catch (e) {
+      print("Pick error: $e");
+    }
+  }
+  // ------------------------------------------------
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+
+            Text(
+              fileContent,
+              style: const TextStyle(fontSize: 16),
+            ),
+
+            const SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: pickFile,
+              child: const Text('Pick a Text File'),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                controller: filename,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'File Name',
+                ),
               ),
-              SwitchListTile(
-                title: Text('Dark Mode'),
-                value: _darkModeEnabled,
-                onChanged: (bool value) {
-                  setState(() {
-                    _darkModeEnabled = value;
-                  });
-                },
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                controller: newnote,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Enter a Note',
+                ),
               ),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: _saveSettings,
-                    child: Text('Save Settings'),
-                  ),
-                  SizedBox(width: 20,),
-                  ElevatedButton(
-                    onPressed: _clearSettings,
-                    child: Text('clear setting'),
-                  ),
-                ],
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                await fileobj.saveTextFile(filename.text, newnote.text);
+                setState(() {
+                  x = newnote.text;
+                  filename.clear();
+                  newnote.clear();
+                });
+              },
+              child: const Text('Save Text'),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TextField(
+                controller: dirName,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Directory Name',
+                ),
               ),
-            ],
-          ),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                await fileobj.creatDir(dirName.text);
+              },
+              child: const Text('Create Directory'),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                await fileobj.getthepath();
+              },
+              child: const Text('Get Path'),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                List<Map> response =
+                await sqlDb.readData("SELECT * FROM department");
+                print(response);
+              },
+              child: const Text('Select All From DB'),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                int response = await sqlDb.deleteData("DELETE FROM std_info2");
+                print(response);
+              },
+              child: const Text('Delete DB Data'),
+            ),
+          ],
         ),
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          String temp = await fileobj.readTextFile();
+          setState(() {
+            fileContent = temp;
+          });
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
