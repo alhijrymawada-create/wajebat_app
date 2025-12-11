@@ -1,42 +1,38 @@
 import 'package:flutter/material.dart';
-import 'LikeButton.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(MyLifecycleApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class MyLifecycleApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Custom Widget Demo',
-      home: const HomeScreen(),
-    );
+  _MyLifecycleAppState createState() => _MyLifecycleAppState();
+}
+
+class _MyLifecycleAppState extends State<MyLifecycleApp> {
+  @override
+  void initState() {
+    super.initState();
+    print("initState called");
   }
-}
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+
+  @override
+  void dispose() {
+    print("dispose called");
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Posts')),
-      body: ListView(
-        children: const [
-          ListTile(
-            title: Text('Post 1'),
-            trailing: LikeButton(),
-          ),
-          ListTile(
-            title: Text('Post 2'),
-            trailing: LikeButton(initialIsLiked: true),
-          ),
-          ListTile(
-            title: Text('Post 3'),
-            trailing: LikeButton(),
-          ),
-        ],
+    print("build called");
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Stateful Widget Lifecycle'),
+        ),
+        body: Center(
+          child: Text('Check the console for lifecycle methods.'),
+        ),
       ),
     );
   }
