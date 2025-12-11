@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'sqldb.dart';
 
 import 'package:path_provider/path_provider.dart';
 String x="";
@@ -43,8 +42,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  SqlDb sqlDb = SqlDb();
-
   int _counter = 0;
   Textfiles fileobj = Textfiles();
 
@@ -80,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (result != null) {
                   if (!kIsWeb) {
                     file = File(result!.files.single.path!);
-                    filecontaint = (await fileobj.readStudentslist(file)) as Future<String>;
+                    filecontaint = (await fileobj.readTextFile2(file)) as Future<String>;
                     //initialfilecontaint=filecontaint;
                     // x='${filecontaint}'.toString();
 
@@ -110,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           TextField(
             controller: newnote,
-            maxLines: 2,
+            maxLines: 4,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'Enter a note',
@@ -151,21 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: const Text('get the path'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              List<Map> response= await sqlDb.readData("SELECT count(*) as 'number of students added to the db' FROM std_info2");
-              print(response);
-
-            },
-            child: const Text('slect all db'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              int response= await sqlDb.deleteData("DELETE FROM std_info2");
-              print(response);
-            },
-            child: const Text('delete db'),
-          ),
 
 
         ]),
@@ -174,8 +156,6 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: (){
           setState(() {
             filecontaint=fileobj.readTextFile();
-            print(filecontaint);
-            //fileobj.getthepath();
           });
         },
         tooltip: 'Increment',
